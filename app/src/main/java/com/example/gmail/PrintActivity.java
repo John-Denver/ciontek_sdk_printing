@@ -1,21 +1,13 @@
 package com.example.gmail;
 
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
@@ -24,699 +16,499 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ctk.sdk.PosApiHelper;
-import java.util.Timer;
 
-import test.apidemo.service.MyService;
-/**
- * Created by Administrator on 2017/8/17.
- */
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Calendar;
 
 public class PrintActivity extends Activity {
 
-    public String tag = "PrintActivity-Robert2";
+    private static final String TAG = "PrintActivity";
 
-    final int PRINT_TEST = 0;
-    final int PRINT_BMP = 2;
-    final int PRINT_BARCODE = 4;
-    final int PRINT_CYCLE = 5;
+    // UI Elements
+    private RadioGroup densityRadioGroup;
+    private RadioButton rbDensity1, rbDensity2, rbDensity3, rbDensity4, rbDensity5;
+    private TextView textViewDensity;
+    private Button printButton;
+    private EditText amountField;
+    private EditText cessPointField;
+    private EditText numberPlateField;
+    private EditText destinationField;
+    private EditText itemField;
+    private EditText quantityField;
 
+    // Printer
+    private PosApiHelper posApiHelper = PosApiHelper.getInstance();
+    private int currentDensity = 2; // Default density
 
-    private RadioGroup rg = null;
-    private RadioGroup rg_mode = null;
-    private RadioButton rb_mode1 = null;
-    private BroadcastReceiver receiver;
-    private IntentFilter filter;
-    private int voltage_level;
-    private int BatteryV;
-    SharedPreferences preferences;
-    SharedPreferences sp;
-    SharedPreferences.Editor editor;
-    private RadioButton rb_high;
-    private RadioButton rb_middle;
-    private RadioButton rb_low;
-    private RadioButton radioButton_4;
-    private RadioButton radioButton_5;
-    private Button gb_test;
-    private Button btnBmp;
+    // Receipt data
+    private String currentReceiptNumber = "";
+    private String currentBillNumber = "";
+    private String currentTimestamp = "";
 
+    // Thread management
+    private PrintThread printThread = null;
+    private boolean isThreadFinished = true;
+    private boolean isWorking = false;
 
-    private final static int ENABLE_RG = 10;
-    private final static int DISABLE_RG = 11;
-
-    TextView textViewMsg = null;
-    TextView textViewGray = null;
-    int ret = -1;
-    private boolean m_bThreadFinished = true;
-
-    private boolean is_cycle = false;
-    private int cycle_num = 0;
-
-    private int RESULT_CODE = 0;
-    //private Pos pos;
-    int IsWorking = 0;
-
-    PosApiHelper posApiHelper = PosApiHelper.getInstance();
-
-    Intent mPrintServiceIntent;
+    // SharedPreferences
+    private SharedPreferences sharedPreferences;
+    private static final String DENSITY_PREF = "PrintDensity";
+    private static final String DENSITY_KEY = "density_value";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //无title
+
+        // Full screen setup
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        //全屏
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_print);
-        //linearLayout = (LinearLayout) this.findViewById(R.id.widget_layout_print);
-        textViewGray = this.findViewById(R.id.textview_Gray);
-        rg = this.findViewById(R.id.rg_Gray_type);
-        rb_high = findViewById(R.id.RadioButton_high);
-        rb_middle = findViewById(R.id.RadioButton_middle);
-        rb_low = findViewById(R.id.radioButton_low);
-        radioButton_4 = findViewById(R.id.radioButton_4);
-        radioButton_5 = findViewById(R.id.radioButton_5);
-        gb_test = findViewById(R.id.button_test);
-        btnBmp = findViewById(R.id.btnBmp);
 
+        // Initialize SharedPreferences
+        sharedPreferences = getSharedPreferences(DENSITY_PREF, Context.MODE_PRIVATE);
 
-        /*printer mode*/
-        rg_mode = this.findViewById(R.id.rg_Gray_mode2);
-        rb_mode1 = this.findViewById(R.id.RadioButton_mode1);
+        // Initialize views
+        initializeViews();
 
-        try {
-            init_Gray();
-        } catch (RemoteException e) {
-            throw new RuntimeException(e);
-        }
+        // Initialize density settings
+        initializeDensity();
 
-        rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-
-                if (printThread != null && !printThread.isThreadFinished()) {
-
-                    Log.e(tag, "Thread is still running...");
-                    return;
-                }
-
-                String strGray=getResources().getString(R.string.selectGray);
-
-                if (checkedId == R.id.radioButton_low) {
-                    textViewGray.setText(strGray + "3");
-                    try {
-                        posApiHelper.PrintSetGray(3);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    setValue(3);
-                } else if (checkedId == R.id.RadioButton_middle) {
-                    textViewGray.setText(strGray + "2");
-                    try {
-                        posApiHelper.PrintSetGray(2);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    setValue(2);
-                } else if (checkedId == R.id.RadioButton_high) {
-                    textViewGray.setText(strGray + "1");
-                    try {
-                        posApiHelper.PrintSetGray(1);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    setValue(1);
-                } else if (checkedId == R.id.radioButton_4) {
-                    textViewGray.setText(strGray + "4");
-                    try {
-                        posApiHelper.PrintSetGray(4);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    setValue(4);
-                } else if (checkedId == R.id.radioButton_5) {
-                    textViewGray.setText(strGray + "5");
-                    try {
-                        posApiHelper.PrintSetGray(5);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    setValue(5);
-                }
-            }
-        });
-
-        /*print mode*/
-        rb_mode1.setChecked(true);
-
-        handler.sendEmptyMessage(0x34);
-        rg_mode.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-
-                if (printThread != null && !printThread.isThreadFinished()) {
-
-                    Log.e(tag, "Thread is still running...");
-                    return;
-                }
-
-                if (checkedId == R.id.RadioButton_mode1) {
-                    try {
-                        posApiHelper.PrintSetMode(0);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    handler.sendEmptyMessage(0x34);
-                }else {
-                    handler.sendEmptyMessage(0x34);
-                    try {
-                        posApiHelper.PrintSetMode(0);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        });
-
+        // Set up listeners
+        setupListeners();
     }
 
-    private void setValue(int val) {
-        sp = getSharedPreferences("Gray", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putInt("value", val);
-        editor.commit();
-    }
+    private void initializeViews() {
+        // Density controls
+        densityRadioGroup = findViewById(R.id.rg_Gray_type);
+        rbDensity1 = findViewById(R.id.RadioButton_high);
+        rbDensity2 = findViewById(R.id.RadioButton_middle);
+        rbDensity3 = findViewById(R.id.radioButton_low);
+        rbDensity4 = findViewById(R.id.radioButton_4);
+        rbDensity5 = findViewById(R.id.radioButton_5);
+        textViewDensity = findViewById(R.id.textview_Gray);
 
-    private int getValue() {
-        sp = getSharedPreferences("Gray", MODE_PRIVATE);
-        int value = sp.getInt("value", 2);
-        return value;
+        // Print button
+        printButton = findViewById(R.id.printButton);
+
+        // Input fields
+        amountField = findViewById(R.id.amountField);
+        cessPointField = findViewById(R.id.cessPointField);
+        numberPlateField = findViewById(R.id.numberPlateField);
+        destinationField = findViewById(R.id.destinationField);
+        itemField = findViewById(R.id.itemField);
+        quantityField = findViewById(R.id.quantityField);
     }
 
     @SuppressLint("SetTextI18n")
-    private void init_Gray() throws RemoteException {
-        int flag = getValue();
-        posApiHelper.PrintSetGray(flag);
+    private void initializeDensity() {
+        // Load saved density
+        currentDensity = sharedPreferences.getInt(DENSITY_KEY, 2);
 
-        String strGray=getResources().getString(R.string.selectGray);
+        try {
+            posApiHelper.PrintSetGray(currentDensity);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error setting initial density", e);
+        }
 
-        if (flag == 3) {
-            rb_low.setChecked(true);
-            textViewGray.setText(strGray+"3");
-        }else if(flag == 2){
-            rb_middle.setChecked(true);
-            textViewGray.setText(strGray+"2");
-        }else if(flag == 1){
-            rb_high.setChecked(true);
-            textViewGray.setText(strGray+"1");
-        }else if(flag == 4){
-            radioButton_4.setChecked(true);
-            textViewGray.setText(strGray+"4");
-        }else if(flag == 5){
-            radioButton_5.setChecked(true);
-            textViewGray.setText(strGray+"5");
+        // Set UI based on saved density
+        String densityText = "Print Density: ";
+        switch (currentDensity) {
+            case 1:
+                rbDensity1.setChecked(true);
+                textViewDensity.setText(densityText + "1 (Lightest)");
+                break;
+            case 2:
+                rbDensity2.setChecked(true);
+                textViewDensity.setText(densityText + "2 (Light)");
+                break;
+            case 3:
+                rbDensity3.setChecked(true);
+                textViewDensity.setText(densityText + "3 (Medium)");
+                break;
+            case 4:
+                rbDensity4.setChecked(true);
+                textViewDensity.setText(densityText + "4 (Dark)");
+                break;
+            case 5:
+                rbDensity5.setChecked(true);
+                textViewDensity.setText(densityText + "5 (Darkest)");
+                break;
         }
     }
 
-    @Override
-    protected void onResume() {
-        // TODO Auto-generated method stub
+    private void setupListeners() {
+        // Density selection listener
+        densityRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (isWorking) {
+                    Log.w(TAG, "Printer is working, density change ignored");
+                    return;
+                }
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        super.onResume();
-        filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                String densityText = "Print Density: ";
+                int newDensity = 2; // default
+
+                if (checkedId == R.id.RadioButton_high) {
+                    newDensity = 1;
+                    textViewDensity.setText(densityText + "1 (Lightest)");
+                } else if (checkedId == R.id.RadioButton_middle) {
+                    newDensity = 2;
+                    textViewDensity.setText(densityText + "2 (Light)");
+                } else if (checkedId == R.id.radioButton_low) {
+                    newDensity = 3;
+                    textViewDensity.setText(densityText + "3 (Medium)");
+                } else if (checkedId == R.id.radioButton_4) {
+                    newDensity = 4;
+                    textViewDensity.setText(densityText + "4 (Dark)");
+                } else if (checkedId == R.id.radioButton_5) {
+                    newDensity = 5;
+                    textViewDensity.setText(densityText + "5 (Darkest)");
+                }
+
+                currentDensity = newDensity;
+                saveDensityPreference(newDensity);
+
+                try {
+                    posApiHelper.PrintSetGray(newDensity);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "Error setting density", e);
+                }
+            }
+        });
+
+        // Print button listener
+        printButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (validateInputFields()) {
+                    generateReceiptDetails();
+                    startPrinting();
+                }
+            }
+        });
     }
 
-    @Override
-    protected void onPause() {
-        // TODO Auto-generated method stub
-
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        super.onPause();
-        QuitHandler();
+    private void saveDensityPreference(int density) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(DENSITY_KEY, density);
+        editor.apply();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        Log.d("onKeyDown", "keyCode = " + keyCode);
-
-        Log.d("ROBERT2 onKeyDown", "keyCode = " + keyCode);
-        Log.d("ROBERT2 onKeyDown", "IsWorking== " + IsWorking);
-        if (keyCode == event.KEYCODE_BACK) {
-            if (IsWorking == 1)
-                return true;
+    private boolean validateInputFields() {
+        if (amountField.getText().toString().trim().isEmpty()) {
+            amountField.setError("Amount is required");
+            return false;
         }
-
-        return super.onKeyDown(keyCode, event);
+        if (cessPointField.getText().toString().trim().isEmpty()) {
+            cessPointField.setError("Cess Point is required");
+            return false;
+        }
+        if (numberPlateField.getText().toString().trim().isEmpty()) {
+            numberPlateField.setError("Number Plate is required");
+            return false;
+        }
+        if (destinationField.getText().toString().trim().isEmpty()) {
+            destinationField.setError("Destination is required");
+            return false;
+        }
+        if (itemField.getText().toString().trim().isEmpty()) {
+            itemField.setError("Item is required");
+            return false;
+        }
+        if (quantityField.getText().toString().trim().isEmpty()) {
+            quantityField.setError("Quantity is required");
+            return false;
+        }
+        return true;
     }
 
-    public void onClickTest(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
+    private void generateReceiptDetails() {
+        currentReceiptNumber = generateReceiptNumber();
+        currentBillNumber = generateBillNumber();
+        currentTimestamp = formatDateAndTime();
+    }
+
+    private void startPrinting() {
+        if (printThread != null && !isThreadFinished) {
+            Log.w(TAG, "Print thread is still running");
             return;
         }
 
-        printThread = new Print_Thread(PRINT_TEST);
+        printThread = new PrintThread();
         printThread.start();
     }
 
-
-    public void OnClickBarcode(View view) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_BARCODE);
-        printThread.start();
-    }
-
-    public void onClickBmp(View view) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_BMP);
-        printThread.start();
-
-    }
-
-    public void onClickCycle(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        if (is_cycle == false) {
-            is_cycle = true;
-            preferences = getSharedPreferences("count", MODE_PRIVATE);
-
-            cycle_num = preferences.getInt("count", 0);
-            SendMsg("total cycle num =" + cycle_num);
-            Log.e(tag, "Thread is still 3000ms...");
-            handlers.postDelayed(runnable, 3000);
-
-        }else{
-            handlers.removeCallbacks(runnable);
-            is_cycle = false;
-        }
-
-
-    }
-
-
-    public void QuitHandler() {
-        is_cycle = false;
-        gb_test.setEnabled(true);
-        btnBmp.setEnabled(true);
-        handlers.removeCallbacks(runnable);
-    }
-
-    Handler handlers = new Handler();
-    Runnable runnable = new Runnable() {
-
+    private class PrintThread extends Thread {
         @Override
         public void run() {
-            // TODO Auto-generated method stub
-
-            Log.e(tag, "TIMER log...");
-            printThread = new Print_Thread(PRINT_CYCLE);
-            printThread.start();
-
-            Log.e(tag, "TIMER log2...");
-            if (RESULT_CODE == 0) {
-                editor = preferences.edit();
-                editor.putInt("count", ++cycle_num);
-                editor.commit();
-                Log.e(tag, "cycle num=" + cycle_num);
-                SendMsg("cycle num =" + cycle_num);
-            }
-            handlers.postDelayed(this, 15000);
-
-        }
-    };
-
-    Print_Thread printThread = null;
-
-    public class Print_Thread extends Thread {
-
-        String content = "1234567890";
-        int type;
-
-        public boolean isThreadFinished() {
-            return m_bThreadFinished;
-        }
-
-        public Print_Thread(int type) {
-            this.type = type;
-        }
-
-        public void run() {
-            Log.d("Robert2", "Print_Thread[ run ] run() begin");
-            Message msg = Message.obtain();
-            Message msg1 = new Message();
-
+            Message msg = new Message();
             synchronized (this) {
+                isThreadFinished = false;
 
-                m_bThreadFinished = false;
                 try {
-                    ret = posApiHelper.PrintInit();
+                    // Initialize printer
+                    int initResult = posApiHelper.PrintInit();
+                    Log.d(TAG, "Printer init result: " + initResult);
+
+                    // Set density
+                    posApiHelper.PrintSetGray(currentDensity);
+
+                    // Check printer status
+                    int statusResult = posApiHelper.PrintCheckStatus();
+                    if (statusResult == -1) {
+                        sendMessage("Error: No Paper");
+                        return;
+                    } else if (statusResult == -2) {
+                        sendMessage("Error: Printer Too Hot");
+                        return;
+                    } else if (statusResult == -3) {
+                        sendMessage("Error: Low Battery");
+                        return;
+                    }
+
+                    // Disable controls during printing
+                    msg.what = DISABLE_CONTROLS;
+                    handler.sendMessage(msg);
+
+                    sendMessage("Printing...");
+
+                    // Print logo
+                    printLogo();
+
+                    // Print receipt content
+                    String receiptContent = buildReceiptContent();
+                    posApiHelper.PrintStr(receiptContent);
+
+                    // Start printing
+                    int printResult = posApiHelper.PrintStart();
+
+                    // Re-enable controls
+                    Message enableMsg = new Message();
+                    enableMsg.what = ENABLE_CONTROLS;
+                    handler.sendMessage(enableMsg);
+
+                    if (printResult != 0) {
+                        Log.e(TAG, "Print failed with result: " + printResult);
+                        if (printResult == -1) {
+                            sendMessage("Error: No Paper");
+                        } else if (printResult == -2) {
+                            sendMessage("Error: Too Hot");
+                        } else if (printResult == -3) {
+                            sendMessage("Error: Low Voltage");
+                        } else {
+                            sendMessage("Print Failed");
+                        }
+                    } else {
+                        sendMessage("Print Completed Successfully");
+                        // Clear fields on successful print
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                clearInputFields();
+                            }
+                        });
+                    }
+
+                } catch (RemoteException e) {
+                    Log.e(TAG, "RemoteException during printing", e);
+                    sendMessage("Print Error: " + e.getMessage());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "Exception during printing", e);
+                    sendMessage("Print Error: " + e.getMessage());
+                } finally {
+                    isThreadFinished = true;
+                    // Ensure controls are re-enabled
+                    Message enableMsg = new Message();
+                    enableMsg.what = ENABLE_CONTROLS;
+                    handler.sendMessage(enableMsg);
                 }
-
-                Log.e(tag, "init code:" + ret);
-
-                ret = getValue();
-                Log.e(tag, "getValue():" + ret);
-
-                try {
-                    posApiHelper.PrintSetGray(ret);
-                } catch (RemoteException e) {
-                    throw new RuntimeException(e);
-                }
-                Log.e(tag, "PrintSetGray():" );
-
-                try {
-                    ret = posApiHelper.PrintCheckStatus();
-                } catch (RemoteException e) {
-                    throw new RuntimeException(e);
-                }
-                Log.e(tag, "PrintCheckStatus():" );
-                if (ret == -1) {
-                    RESULT_CODE = -1;
-                    Log.e(tag, "Lib_PrnCheckStatus fail, ret = " + ret);
-                    SendMsg("Error, No Paper ");
-                    m_bThreadFinished = true;
-                    return;
-                } else if (ret == -2) {
-                    RESULT_CODE = -1;
-                    Log.e(tag, "Lib_PrnCheckStatus fail, ret = " + ret);
-                    SendMsg("Error, Printer Too Hot ");
-                    m_bThreadFinished = true;
-                    return;
-                } else if (ret == -3) {
-                    RESULT_CODE = -1;
-                    Log.e(tag, "voltage = " + (BatteryV * 2));
-                    SendMsg("Battery less :" + (BatteryV * 2));
-                    m_bThreadFinished = true;
-                    return;
-                }
-                else
-                {
-                    RESULT_CODE = 0;
-                }
-                Log.d("Robert2", "Lib_PrnStart type= "+type );
-
-
-                switch (type) {
-                    case PRINT_TEST:
-                        Log.d("Robert2", "Lib_PrnStart ret START0 " );
-                        SendMsg("PRINT_TEST");
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-
-                        try {
-                            posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0x00);
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("英语:Hello, Long time no see   ￡ ：2089.22\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("意大利语Italian :Ciao, non CI vediamo da Molto Tempo.\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("西班牙语:España, ¡Hola! Cuánto tiempo sin verte!\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("法语:Bonjour! Ça fait longtemps!\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("ABCDEFGHIJKLMNHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNHIJKLMNOPQRSTUVWXYZ\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("12345678901234567890123456789012345678901234567890+_)(*&^%$#@!~\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("                                         \n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("                                         \n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        SendMsg("Printing... ");
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("Robert2", "Lib_PrnStart ret = " + ret);
-
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-                            Log.e("liuhao", "Lib_PrnStart fail, ret = " + ret);
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if(ret == -2) {
-                                SendMsg("too hot ");
-                            }else if(ret == -3) {
-                                SendMsg("low voltage ");
-                            }else{
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-                        Log.d("Robert2", "Lib_PrnStart ret9 " );
-                        break;
-
-
-
-                    case PRINT_BMP:
-                        SendMsg("PRINT_BMP");
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-
-                        //   Bitmap bmp = BitmapFactory.decodeResource(PrintActivity.this.getResources(), R.mipmap.metrolinx1bitdepth);
-                        final long start_BmpD = System.currentTimeMillis();
-
-                        Bitmap bmp1 = BitmapFactory.decodeResource(PrintActivity.this.getResources(), R.mipmap.test001);
-                        final long end_BmpD = System.currentTimeMillis();
-                        final long decodetime = end_BmpD - start_BmpD;
-                        final long start_PrintBmp = System.currentTimeMillis();
-                        try {
-                            ret = posApiHelper.PrintBmp(bmp1);
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        if (ret == 0) {
-                            try {
-                                posApiHelper.PrintStr("\n\n\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            SendMsg("Printing... ");
-                            // ret = posApiHelper.PrintCtnStart();
-                            try {
-                                ret = posApiHelper.PrintStart();
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            msg1.what = ENABLE_RG;
-                            handler.sendMessage(msg1);
-
-                            Log.d("", "Lib_PrnStart ret = " + ret);
-                            if (ret != 0) {
-                                RESULT_CODE = -1;
-                                Log.e("liuhao", "Lib_PrnStart fail, ret = " + ret);
-                                if (ret == -1) {
-                                    SendMsg("No Print Paper ");
-                                } else if(ret == -2) {
-                                    SendMsg("too hot ");
-                                }else if(ret == -3) {
-                                    SendMsg("low voltage ");
-                                }else{
-                                    SendMsg("Print fail ");
-                                }
-                            } else {
-                                final long end_PrintBmp = System.currentTimeMillis();
-
-                                RESULT_CODE = 0;
-                                final long PrintTime = start_PrintBmp - end_PrintBmp;
-                                SendMsg("Print Finish");
-                                // SendMsg("Print Finish BMP decodetime="+decodetime + "PrintBmpTime"+PrintTime);
-                            }
-                        } else {
-                            RESULT_CODE = -1;
-                            SendMsg("Lib_PrnBmp Failed");
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                m_bThreadFinished = true;
             }
         }
     }
 
+    private void printLogo() {
+        try {
+            // Load and prepare the logo image
+            Bitmap originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.logo2);
+            if (originalBitmap != null) {
+                Log.d(TAG, "Logo bitmap loaded successfully");
 
-    public class BatteryReceiver extends BroadcastReceiver {
-        public void onReceive(Context context, Intent intent) {
-            voltage_level = intent.getExtras().getInt("level");// ��õ�ǰ����
-            Log.e("wbw", "current  = " + voltage_level);
-            BatteryV = intent.getIntExtra("voltage", 0);  //电池电压
-            Log.e("wbw", "BatteryV  = " + BatteryV);
-            Log.e("wbw", "V  = " + BatteryV * 2 / 100);
-            //	m_voltage = (int) (65+19*voltage_level/100); //放大十倍
-            //   Log.e("wbw","m_voltage  = " + m_voltage );
+                // Resize to printer width
+                int targetWidth = 256;
+                float scaleFactor = (float) targetWidth / originalBitmap.getWidth();
+                int targetHeight = (int) (originalBitmap.getHeight() * scaleFactor);
+                Bitmap resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, true);
+
+                // Print the logo using the correct method
+                int logoResult = posApiHelper.PrintBmp(resizedBitmap);
+                Log.d(TAG, "Logo print result: " + logoResult);
+
+                if (logoResult != 0) {
+                    Log.e(TAG, "Logo printing failed with result: " + logoResult);
+                }
+
+                // Clean up
+                resizedBitmap.recycle();
+                originalBitmap.recycle(); // Don't forget to recycle the original bitmap too
+            } else {
+                Log.e(TAG, "Logo bitmap (R.mipmap.test001) could not be loaded. Check if the file exists and is correctly named.");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error printing logo", e);
         }
     }
 
-    // 在Activity中，我们通过ServiceConnection接口来取得建立连接与连接意外丢失的回调
+    private String buildReceiptContent() throws IOException {
+        // Get input values
+        double amount = Double.parseDouble(amountField.getText().toString());
+        int quantity = Integer.parseInt(quantityField.getText().toString());
+        double totalAmount = amount * quantity;
 
-    ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-//            MyService.MyBinder binder = (MyService.MyBinder)service;
-//            binder.getService();// 获取到的Service即MyService
-            MyService.MyBinder binder = (MyService.MyBinder) service;
-            MyService myService = binder.getService();
+        StringBuilder receipt = new StringBuilder();
 
-            myService.setCallback(new MyService.CallBackPrintStatus() {
-                @Override
-                public void printStatusChange(String strStatus) {
-                    SendMsg(strStatus);
-                }
-            });
 
-        }
+        // Header
+        receipt.append("  County Government\n");
+        receipt.append("   of Kajiado\n");
+        receipt.append("--------------------------------\n");
+        receipt.append("*** V1 ***\n");
+        receipt.append("Receipt No  ").append(currentReceiptNumber).append("\n");
+        receipt.append("--------------------------------\n");
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
+        // Total amount
+        receipt.append("Amount ").append(String.format("%.1f", totalAmount)).append("\n");
+        receipt.append("--------------------------------\n");
 
-        }
-    };
+        // Transaction details
+        receipt.append("Cess Point : ").append(cessPointField.getText()).append("\n");
+        receipt.append("Number Plate : ").append(numberPlateField.getText()).append("\n");
+        receipt.append("Destination : ").append(destinationField.getText()).append("\n");
+        receipt.append("Bill No :").append(currentBillNumber.toUpperCase()).append("\n");
+        receipt.append("--------------------------------\n");
 
-    public void SendMsg(String strInfo) {
+        // Item details
+        receipt.append("Item: ").append(itemField.getText()).append("\n");
+        receipt.append("Amount: ").append(String.format("%.2f", amount)).append("\n");
+        receipt.append("Quantity: ").append(quantity).append("\n");
+        receipt.append("--------------------------------\n");
+        receipt.append("--------------------------------\n");
+
+        // Footer
+        receipt.append("Issued by: Test User\n");
+        receipt.append("--------------------------------\n");
+        receipt.append("DSN: TEST001\n");
+        receipt.append("--------------------------------\n");
+        receipt.append(currentTimestamp).append("\n");
+        receipt.append("--------------------------------\n");
+        receipt.append(" KajiadoPay\n");
+
+        return receipt.toString();
+    }
+
+    private void clearInputFields() {
+        amountField.setText("");
+        cessPointField.setText("");
+        numberPlateField.setText("");
+        destinationField.setText("");
+        itemField.setText("");
+        quantityField.setText("");
+    }
+
+    private String generateReceiptNumber() {
+        return String.valueOf(System.currentTimeMillis() % 100000000).substring(0, 8);
+    }
+
+    private String generateBillNumber() {
+        return java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private String formatDateAndTime() {
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int month = calendar.get(Calendar.MONTH) + 1;
+        int year = calendar.get(Calendar.YEAR);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        return String.format("%02d/%02d/%d %02d:%02d", day, month, year, hour, minute);
+    }
+
+    private void sendMessage(String message) {
         Message msg = new Message();
-        Bundle b = new Bundle();
-        b.putString("MSG", strInfo);
-        msg.setData(b);
+        Bundle bundle = new Bundle();
+        bundle.putString("MESSAGE", message);
+        msg.setData(bundle);
         handler.sendMessage(msg);
     }
+
+    // Handler constants
+    private static final int ENABLE_CONTROLS = 10;
+    private static final int DISABLE_CONTROLS = 11;
 
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-
             switch (msg.what) {
-                case DISABLE_RG:
-                    IsWorking = 1;
-                    rb_high.setEnabled(false);
-                    rb_middle.setEnabled(false);
-                    rb_low.setEnabled(false);
-                    radioButton_4.setEnabled(false);
-                    radioButton_5.setEnabled(false);
+                case DISABLE_CONTROLS:
+                    isWorking = true;
+                    setControlsEnabled(false);
                     break;
 
-                case ENABLE_RG:
-                    IsWorking = 0;
-                    rb_high.setEnabled(true);
-                    rb_middle.setEnabled(true);
-                    rb_low.setEnabled(true);
-                    radioButton_4.setEnabled(true);
-                    radioButton_5.setEnabled(true);
+                case ENABLE_CONTROLS:
+                    isWorking = false;
+                    setControlsEnabled(true);
                     break;
-
-                case 0x34:
-
-                    gb_test.setEnabled(true);
-                    btnBmp.setEnabled(true);
-
-                    gb_test.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    btnBmp.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-
-                    break;
-
-                case 0x56:
-                    //gb_unicode.setVisibility(View.INVISIBLE);
-                    gb_test.setBackgroundColor(Color.GRAY);
-                    btnBmp.setBackgroundColor(Color.GRAY);
-
-                    gb_test.setEnabled(false);
-                    btnBmp.setEnabled(false);
-
-                   break;
 
                 default:
-                    Bundle b = msg.getData();
+                    Bundle bundle = msg.getData();
+                    String message = bundle.getString("MESSAGE");
+                    if (message != null) {
+                        Toast.makeText(PrintActivity.this, message, Toast.LENGTH_SHORT).show();
+                    }
                     break;
             }
         }
     };
 
+    private void setControlsEnabled(boolean enabled) {
+        rbDensity1.setEnabled(enabled);
+        rbDensity2.setEnabled(enabled);
+        rbDensity3.setEnabled(enabled);
+        rbDensity4.setEnabled(enabled);
+        rbDensity5.setEnabled(enabled);
+        printButton.setEnabled(enabled);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && isWorking) {
+            return true; // Prevent back press during printing
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 }

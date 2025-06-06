@@ -1,153 +1,190 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#ffffff"
-    android:gravity="center"
-    android:orientation="vertical"
-    >
+<ScrollView
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:fillViewport="true"
+android:padding="16dp">
 
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Print Density Controls -->
     <TextView
         android:id="@+id/textview_Gray"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:text="@string/selectGray"
-        android:textColor="@color/colorPrimary"
-        android:textSize="25sp" />
+        android:text="Print Density: 2 (Light)"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
 
     <RadioGroup
         android:id="@+id/rg_Gray_type"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_horizontal">
 
         <RadioButton
             android:id="@+id/RadioButton_high"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@drawable/radio_button_style"
-            android:text=" 1 "
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1"
+            android:layout_marginEnd="8dp"/>
 
         <RadioButton
             android:id="@+id/RadioButton_middle"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@drawable/radio_button_style"
-            android:text=" 2 "
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2"
+            android:checked="true"
+            android:layout_marginEnd="8dp"/>
 
         <RadioButton
             android:id="@+id/radioButton_low"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@drawable/radio_button_style"
-            android:text=" 3 "
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3"
+            android:layout_marginEnd="8dp"/>
 
         <RadioButton
             android:id="@+id/radioButton_4"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@drawable/radio_button_style"
-            android:text=" 4 "
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4"
+            android:layout_marginEnd="8dp"/>
 
         <RadioButton
             android:id="@+id/radioButton_5"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@drawable/radio_button_style"
-            android:text=" 5 "
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark" />
-
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"/>
     </RadioGroup>
 
-
-    <TextView
-        android:id="@+id/textview_mode"
+    <!-- Station (Dropdown) -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="Printer mode :"
-        android:textColor="@color/colorPrimary"
-        android:textSize="25sp"
-        />
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:hint="Station">
 
-    <RadioGroup
-        android:id="@+id/rg_Gray_mode2"
+        <AutoCompleteTextView
+            android:id="@+id/stationSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:inputType="none"
+            android:paddingLeft="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Amount -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:orientation="horizontal"
-        >
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Amount">
 
-        <RadioButton
-            android:id="@+id/RadioButton_mode1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@drawable/radio_button_style"
-            android:text="Receipt"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark"
-            />
-    </RadioGroup>
+        <EditText
+            android:id="@+id/amountField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:inputType="numberDecimal"
+            android:paddingLeft="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
 
-    <LinearLayout
+    <!-- Cess Point -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="20dp"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Cess Point">
 
-        <Button
-            android:id="@+id/button_test"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginRight="10dp"
-            android:layout_weight="1"
-            android:background="@drawable/shape_button"
-            android:onClick="onClickTest"
-            android:text="Consume"
-            android:textColor="@color/white" />
+        <EditText
+            android:id="@+id/cessPointField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:paddingLeft="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-    </LinearLayout>
-
-    <LinearLayout
+    <!-- Number Plate -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="15dp"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Number Plate">
 
+        <EditText
+            android:id="@+id/numberPlateField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:paddingLeft="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
-            android:id="@+id/btnBmp"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/shape_button"
-            android:onClick="onClickBmp"
-            android:textColor="@color/white"
-            android:text="Bitmap" />
+    <!-- Destination -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Destination">
 
-    </LinearLayout>
+        <EditText
+            android:id="@+id/destinationField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:paddingLeft="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Item -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Item">
+
+        <EditText
+            android:id="@+id/itemField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:paddingLeft="8dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Quantity -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Quantity">
+
+        <EditText
+            android:id="@+id/quantityField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:paddingLeft="8dp"
+            android:inputType="number" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Print Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/printButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Print Receipt"
+        style="@style/Widget.MaterialComponents.Button"
+        app:cornerRadius="8dp"
+        android:backgroundTint="#4CAF50"
+        android:layout_marginTop="48dp" />
 </LinearLayout>
+</ScrollView>
