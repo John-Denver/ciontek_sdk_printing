@@ -95,7 +95,6 @@ public class PrintActivity extends Activity {
 
         setContentView(R.layout.activity_print);
         //linearLayout = (LinearLayout) this.findViewById(R.id.widget_layout_print);
-        textViewMsg = this.findViewById(R.id.textView_msg);
         textViewGray = this.findViewById(R.id.textview_Gray);
         rg = this.findViewById(R.id.rg_Gray_type);
         rb_high = findViewById(R.id.RadioButton_high);
@@ -715,8 +714,6 @@ public class PrintActivity extends Activity {
 
                 default:
                     Bundle b = msg.getData();
-                    String strInfo = b.getString("MSG");
-                    textViewMsg.setText(strInfo);
                     break;
             }
         }
