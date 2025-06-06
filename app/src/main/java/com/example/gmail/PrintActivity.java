@@ -28,7 +28,6 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.ctk.sdk.PosApiHelper;
-
 import java.util.Timer;
 
 import test.apidemo.service.MyService;
@@ -45,20 +44,11 @@ public class PrintActivity extends Activity {
     final int PRINT_BMP = 2;
     final int PRINT_BARCODE = 4;
     final int PRINT_CYCLE = 5;
-    final int PRINT_LONGER = 7;
-    final int PRINT_OPEN = 8;
 
-
-    final int PRINT_LAB_SINGLE = 9;
-    final int PRINT_LAB_CONTINUE = 10;
-    final int PRINT_LAB_BAR = 11;
-    final int PRINT_LAB_BIT = 12;
 
     private RadioGroup rg = null;
     private RadioGroup rg_mode = null;
     private RadioButton rb_mode1 = null;
-    private Timer timer;
-    private Timer timer2;
     private BroadcastReceiver receiver;
     private IntentFilter filter;
     private int voltage_level;
@@ -73,17 +63,7 @@ public class PrintActivity extends Activity {
     private RadioButton radioButton_5;
     private Button gb_test;
     private Button gb_unicode;
-    private Button gb_barcode;
-    private Button btnBmp;
-
-    private Button gb_open;
-    private Button gb_long;
-    private Button gb_printCycle;
-
-    private Button gb_single;
-    private Button gb_continue;
-    private Button gb_bar;
-    private Button gb_bitm;
+  private Button btnBmp;
 
 
     private final static int ENABLE_RG = 10;
@@ -116,31 +96,22 @@ public class PrintActivity extends Activity {
 
         setContentView(R.layout.activity_print);
         //linearLayout = (LinearLayout) this.findViewById(R.id.widget_layout_print);
-        textViewMsg = (TextView) this.findViewById(R.id.textView_msg);
-        textViewGray = (TextView) this.findViewById(R.id.textview_Gray);
-        rg = (RadioGroup) this.findViewById(R.id.rg_Gray_type);
-        rb_high = (RadioButton) findViewById(R.id.RadioButton_high);
-        rb_middle = (RadioButton) findViewById(R.id.RadioButton_middle);
-        rb_low = (RadioButton) findViewById(R.id.radioButton_low);
-        radioButton_4 = (RadioButton) findViewById(R.id.radioButton_4);
-        radioButton_5 = (RadioButton) findViewById(R.id.radioButton_5);
-        gb_test = (Button) findViewById(R.id.button_test);
-        gb_unicode = (Button) findViewById(R.id.button_unicode);
-        gb_barcode = (Button) findViewById(R.id.button_barcode);
-        btnBmp = (Button) findViewById(R.id.btnBmp);
-        gb_printCycle = (Button) findViewById(R.id.printCycle);
+        textViewMsg = this.findViewById(R.id.textView_msg);
+        textViewGray = this.findViewById(R.id.textview_Gray);
+        rg = this.findViewById(R.id.rg_Gray_type);
+        rb_high = findViewById(R.id.RadioButton_high);
+        rb_middle = findViewById(R.id.RadioButton_middle);
+        rb_low = findViewById(R.id.radioButton_low);
+        radioButton_4 = findViewById(R.id.radioButton_4);
+        radioButton_5 = findViewById(R.id.radioButton_5);
+        gb_test = findViewById(R.id.button_test);
+        gb_unicode = findViewById(R.id.button_unicode);
+        btnBmp = findViewById(R.id.btnBmp);
 
-        //----------
-        gb_open = (Button) findViewById(R.id.btn_open);
-        gb_long = (Button) findViewById(R.id.btnLong);
-        gb_single = (Button) findViewById(R.id.btnLabal_single);
-        gb_continue = (Button) findViewById(R.id.btnLabal_continue);
-        gb_bar = (Button) findViewById(R.id.btnLabal_barcode);
-        gb_bitm = (Button) findViewById(R.id.btnLabal_bitmap);
 
         /*printer mode*/
-        rg_mode = (RadioGroup) this.findViewById(R.id.rg_Gray_mode2);
-        rb_mode1 = (RadioButton) this.findViewById(R.id.RadioButton_mode1);
+        rg_mode = this.findViewById(R.id.rg_Gray_mode2);
+        rb_mode1 = this.findViewById(R.id.RadioButton_mode1);
 
         try {
             init_Gray();
@@ -225,14 +196,7 @@ public class PrintActivity extends Activity {
                         throw new RuntimeException(e);
                     }
                     handler.sendEmptyMessage(0x34);
-                } else if (checkedId == R.id.RadioButton_mode2) {
-                    try {
-                        posApiHelper.PrintSetMode(1);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    handler.sendEmptyMessage(0x56);
-                } else {
+                }else {
                     handler.sendEmptyMessage(0x34);
                     try {
                         posApiHelper.PrintSetMode(0);
@@ -376,92 +340,18 @@ public class PrintActivity extends Activity {
             Log.e(tag, "Thread is still 3000ms...");
             handlers.postDelayed(runnable, 3000);
 
-            gb_printCycle.setText("Stop");
-
         }else{
             handlers.removeCallbacks(runnable);
-            gb_printCycle.setText("Cycle");
             is_cycle = false;
         }
 
 
     }
 
-    public void onClickClean(View v) {
-        textViewMsg.setText("");
-        preferences = getSharedPreferences("count", MODE_PRIVATE);
-        cycle_num = preferences.getInt("count", 0);
-        editor = preferences.edit();
-        cycle_num = 0;
-        editor.putInt("count", cycle_num);
-        editor.commit();
-        QuitHandler();
-    }
-
-    public void onClickPrnOpen(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_OPEN);
-        printThread.start();
-    }
-
-    public void onClickLong(View v) {
-
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-        printThread = new Print_Thread(PRINT_LONGER);
-        printThread.start();
-    }
-
-    public void onClick_single(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_LAB_SINGLE);
-        printThread.start();
-    }
-
-    public void onClick_continue(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_LAB_CONTINUE);
-        printThread.start();
-    }
-
-    public void onClick_barcode(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_LAB_BAR);
-        printThread.start();
-    }
-
-    public void onClick_bitmap(View v) {
-        if (printThread != null && !printThread.isThreadFinished()) {
-            Log.e(tag, "Thread is still running...");
-            return;
-        }
-
-        printThread = new Print_Thread(PRINT_LAB_BIT);
-        printThread.start();
-    }
 
     public void QuitHandler() {
         is_cycle = false;
         gb_test.setEnabled(true);
-        gb_barcode.setEnabled(true);
         btnBmp.setEnabled(true);
         gb_unicode.setEnabled(true);
         handlers.removeCallbacks(runnable);
@@ -561,141 +451,10 @@ public class PrintActivity extends Activity {
                 {
                     RESULT_CODE = 0;
                 }
-
-
                 Log.d("Robert2", "Lib_PrnStart type= "+type );
+
+
                 switch (type) {
-
-                    case PRINT_LONGER:
-                        SendMsg("PRINT LONG");
-
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-
-                        String stringg = " a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?";
-
-                        try {
-                            posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0x00);
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >? a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >? a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-//						ret = Print.Lib_PrnStr(" a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?a b c d e f g h i j k l m n o p q r s t u v w x z A B C D E F G H I J K L M N O P Q R S T U V W X Z 1 2 3 4 5 6 7 8 9 ! @ # $ % ^ & * () _ + ~   [ ] , . / ; ' { } : : | < >?");
-                        try {
-                            posApiHelper.PrintBarcode(content, 360, 120, "CODE_128");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("CODE_128 : " + content + "\n\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintBarcode(content, 240, 240, "QR_CODE");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("QR_CODE : " + content + "\n\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("发卡行(ISSUER):01020001 工商银行\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("卡号(CARD NO):\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("    9558803602109503920\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("收单行(ACQUIRER):03050011民生银行\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("交易类型(TXN. TYPE):消费/SALE\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("卡有效期(EXP. DATE):2013/08\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("- - - - - - - - - - - - - - - -\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("                                         ");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        SendMsg("Printing... ");
-                        final long starttime_long = System.currentTimeMillis();
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        Log.e(tag, "PrintStart ret = " + ret);
-
-                        msg1.what = ENABLE_RG;
-
-                        handler.sendMessage(msg1);
-
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-                            Log.e("liuhao", "Lib_PrnStart fail, ret = " + ret);
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if(ret == -2) {
-                                SendMsg("too hot ");
-                            }else if(ret == -3) {
-                                SendMsg("low voltage ");
-                            }else{
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-
-                            final long endttime_long = System.currentTimeMillis();
-                            final long totaltime_long = starttime_long - endttime_long;
-                            SendMsg("Print finish " );
-                        }
-                        break;
-
                     case PRINT_TEST:
                         Log.d("Robert2", "Lib_PrnStart ret START0 " );
                         SendMsg("PRINT_TEST");
@@ -790,231 +549,6 @@ public class PrintActivity extends Activity {
                         Log.d("Robert2", "Lib_PrnStart ret9 " );
                         break;
 
-
-                    case PRINT_CYCLE:
-
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-
-                        try {
-                            posApiHelper.PrintSetFont((byte) 16, (byte) 16, (byte) 0x33);
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        for (int i = 1; i < 3; i++) {
-                            try {
-                                posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0x33);
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("打印第：" + i + "次\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("商户存根MERCHANT COPY\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("- - - - - - - - - - - - - - - - - - - - - - - -\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0x00);
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("商户名称(MERCHANT NAME):\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("中国银联直连测试\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("商户编号(MERCHANT NO):\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("    001420183990573\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("终端编号(TERMINAL NO):00026715\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("操作员号(OPERATOR NO):12345678\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("- - - - - - - - - - - - - - - -\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            //	posApiHelper.PrintStr("\n");
-                            try {
-                                posApiHelper.PrintStr("发卡行(ISSUER):01020001 工商银行\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("卡号(CARD NO):\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("    9558803602109503920\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("收单行(ACQUIRER):03050011民生银行\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("交易类型(TXN. TYPE):消费/SALE\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("卡有效期(EXP. DATE):2013/08\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("- - - - - - - - - - - - - - - -\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            //	posApiHelper.PrintStr("\n");
-                            try {
-                                posApiHelper.PrintStr("批次号(BATCH NO)  :000023\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("凭证号(VOUCHER NO):000018\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("授权号(AUTH NO)   :987654\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("日期/时间(DATE/TIME):\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("    2008/01/28 16:46:32\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("交易参考号(REF. NO):200801280015\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("金额(AMOUNT):  RMB:2.55\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("- - - - - - - - - - - - - - - -\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            //	posApiHelper.PrintStr("\n");
-                            try {
-                                posApiHelper.PrintStr("备注/REFERENCE\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("- - - - - - - - - - - - - - - -\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintSetFont((byte) 16, (byte) 16, (byte) 0x00);
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("持卡人签名(CARDHOLDER SIGNATURE)\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("- - - - - - - - - - - - - - - - - - - - - - - -\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            //	posApiHelper.PrintStr("\n");
-                            try {
-                                posApiHelper.PrintStr("  本人确认以上交易，同意将其计入本卡帐户\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("  I ACKNOWLEDGE SATISFACTORY RECEIPT\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("\n\n\n\n\n\n\n\n\n\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            //  ret = posApiHelper.PrintCtnStart();
-                            try {
-                                ret = posApiHelper.PrintStart();
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            // if (ret != 0) break;
-                        }
-
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-                            Log.e("liuhao", "Lib_PrnStart fail, ret = " + ret);
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if(ret == -2) {
-                                SendMsg("too hot ");
-                            }else if(ret == -3) {
-                                SendMsg("low voltage ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                        }
-
-
-                        break;
 
                     case PRINT_UNICODE:
                         Log.d("Robert2", "Lib_PrnStart ret START11 " );
@@ -1298,44 +832,6 @@ public class PrintActivity extends Activity {
                         //ret = posApiHelper.PrintClose();
                         break;
 
-                    case PRINT_OPEN:
-                        SendMsg("PRINT_OPEN");
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-
-                        SendMsg("Print Open... ");
-
-                        try {
-                            posApiHelper.PrintStr("                                         \n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-                            Log.e("liuhao", "Lib_PrnStart fail, ret = " + ret);
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if (ret == -2) {
-                                SendMsg("too hot ");
-                            } else if (ret == -3) {
-                                SendMsg("low voltage ");
-                            } else {
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-                        break;
 
                     case PRINT_BMP:
                         SendMsg("PRINT_BMP");
@@ -1412,351 +908,6 @@ public class PrintActivity extends Activity {
                             SendMsg("Lib_PrnBmp Failed");
                         }
                         break;
-
-                    case PRINT_BARCODE:
-                        SendMsg("PRINT_BARCODE");
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-
-                        content = "com.chips.ewallet.scheme://{\"PayeeMemberUuid\":\"a3d7fe8e-873d-499b-9f11-000000000000\",\"PayerMemberUuid\":null,\"TotalAmount\":\"900\",\"PayeeSiteUuid\":null,\"PayeeTransId\":\"100101-084850-6444\",\"PayeeSiteReference\":\"\",\"PayeeDescription\":null,\"ConfirmationUuid\":null,\"StpReference\":null}";
-                        try {
-                            posApiHelper.PrintStr("QR_CODE display " );
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintBarcode(content, 360, 360, "QR_CODE");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("PrintQrCode_Cut display " );
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintQrCode_Cut(content, 360, 360, "QR_CODE");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("PrintCutQrCode_Str display " );
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintCutQrCode_Str(content,"PK TXT adsad adasd sda",5, 300, 300, "QR_CODE");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("QR_CODE : " + content + "\n\n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("                                        \n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("                                        \n");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-                        SendMsg("Printing... ");
-                        //ret = posApiHelper.PrintCtnStart();
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if(ret == -2) {
-                                SendMsg("too hot ");
-                            }else if(ret == -3) {
-                                SendMsg("low voltage ");
-                            }else{
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-
-                        break;
-
-
-
-                    case PRINT_LAB_SINGLE:
-                        SendMsg("SINGLE");
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-                        SendMsg("Print SINGLE... ");
-                        try {
-                            posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0x00);
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("Alibaba taobao shop");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("amount:30 dollars");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("weight:30 kg");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-
-                        //error
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        try {
-                            posApiHelper.PrintStr("中文:你好，好久不见。");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-
-
-                        //good
-//                        posApiHelper.PrintStr("中文:你好，好久不见。");
-//                        posApiHelper.PrintStr("中文:你好，好久不见。");
-//                        posApiHelper.PrintStr("中文:你好，好久不见。");
-//                        posApiHelper.PrintStr("thank you\n");
-
-                        //    ret =  posApiHelper.PrintCtnStart();
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if (ret == -2) {
-                                SendMsg("too hot ");
-                            } else if (ret == -3) {
-                                SendMsg("low voltage ");
-                            } else {
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-                        break;
-
-                    case PRINT_LAB_CONTINUE:
-                        int j = 0;
-                        SendMsg("continue");
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-                        SendMsg("Print continue... ");
-                        for(j = 0; j <3; j++)
-                        {
-                            try {
-                                posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0x00);
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("Shopping");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("amount:00 dollars");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("weight:00 kg");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("the unit price:00");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("time...  day...");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("Have a nice day\n");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("中文:你好，好久不见。");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                posApiHelper.PrintStr("中文:你好，好久不见。");
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                            // ret =  posApiHelper.PrintCtnStart();
-                            try {
-                                ret = posApiHelper.PrintStart();
-                            } catch (RemoteException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if (ret == -2) {
-                                SendMsg("too hot ");
-                            } else if (ret == -3) {
-                                SendMsg("low voltage ");
-                            } else {
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-                        break;
-
-                    case PRINT_LAB_BAR:
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-                        content = "www.baidu.com/123456789123456789123456789";
-                        try {
-                            posApiHelper.PrintQrCode_Cut(content, 200, 200, "QR_CODE");
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        SendMsg("Printing... ");
-                        //ret = posApiHelper.PrintCtnStart();
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if (ret == -2) {
-                                SendMsg("too hot ");
-                            } else if (ret == -3) {
-                                SendMsg("low voltage ");
-                            } else {
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-                        break;
-
-                    case PRINT_LAB_BIT:
-                        msg.what = DISABLE_RG;
-                        handler.sendMessage(msg);
-                        SendMsg("Print bitmap... ");
-
-                        bmp1 = BitmapFactory.decodeResource(PrintActivity.this.getResources(), R.mipmap.test001);
-                        try {
-                            ret = posApiHelper.PrintBmp(bmp1);
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        SendMsg("Printing... ");
-                        // ret = posApiHelper.PrintCtnStart();
-                        try {
-                            ret = posApiHelper.PrintStart();
-                        } catch (RemoteException e) {
-                            throw new RuntimeException(e);
-                        }
-                        msg1.what = ENABLE_RG;
-                        handler.sendMessage(msg1);
-
-                        Log.d("", "Lib_PrnStart ret = " + ret);
-                        if (ret != 0) {
-                            RESULT_CODE = -1;
-
-                            if (ret == -1) {
-                                SendMsg("No Print Paper ");
-                            } else if (ret == -2) {
-                                SendMsg("too hot ");
-                            } else if (ret == -3) {
-                                SendMsg("low voltage ");
-                            } else {
-                                SendMsg("Print fail ");
-                            }
-                        } else {
-                            RESULT_CODE = 0;
-                            SendMsg("Print Finish ");
-                        }
-                        break;
-
                     default:
                         break;
                 }
@@ -1835,31 +986,14 @@ public class PrintActivity extends Activity {
                     break;
 
                 case 0x34:
-                    gb_single.setEnabled(false);
-                    gb_continue.setEnabled(false);
-                    gb_bar.setEnabled(false);
-                    gb_bitm.setEnabled(false);
-
-                    gb_single.setBackgroundColor(Color.GRAY);
-                    gb_continue.setBackgroundColor(Color.GRAY);
-                    gb_bar.setBackgroundColor(Color.GRAY);
-                    gb_bitm.setBackgroundColor(Color.GRAY);
 
                     gb_test.setEnabled(true);
                     gb_unicode.setEnabled(true);
-                    gb_barcode.setEnabled(true);
                     btnBmp.setEnabled(true);
-                    gb_open.setEnabled(true);
-                    gb_long.setEnabled(true);
-                    gb_printCycle.setEnabled(true);
 
                     gb_test.setBackgroundColor(getResources().getColor(R.color.item_image_select));
                     gb_unicode.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_barcode.setBackgroundColor(getResources().getColor(R.color.item_image_select));
                     btnBmp.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_open.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_long.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_printCycle.setBackgroundColor(getResources().getColor(R.color.item_image_select));
 
                     break;
 
@@ -1867,30 +1001,13 @@ public class PrintActivity extends Activity {
                     //gb_unicode.setVisibility(View.INVISIBLE);
                     gb_test.setBackgroundColor(Color.GRAY);
                     gb_unicode.setBackgroundColor(Color.GRAY);
-                    gb_barcode.setBackgroundColor(Color.GRAY);
                     btnBmp.setBackgroundColor(Color.GRAY);
-                    gb_open.setBackgroundColor(Color.GRAY);
-                    gb_long.setBackgroundColor(Color.GRAY);
-                    gb_printCycle.setBackgroundColor(Color.GRAY);
 
                     gb_test.setEnabled(false);
                     gb_unicode.setEnabled(false);
-                    gb_barcode.setEnabled(false);
                     btnBmp.setEnabled(false);
-                    gb_open.setEnabled(false);
-                    gb_long.setEnabled(false);
-                    gb_printCycle.setEnabled(false);
 
-                    gb_single.setEnabled(true);
-                    gb_continue.setEnabled(true);
-                    gb_bar.setEnabled(true);
-                    gb_bitm.setEnabled(true);
-
-                    gb_single.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_continue.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_bar.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    gb_bitm.setBackgroundColor(getResources().getColor(R.color.item_image_select));
-                    break;
+                   break;
 
                 default:
                     Bundle b = msg.getData();
