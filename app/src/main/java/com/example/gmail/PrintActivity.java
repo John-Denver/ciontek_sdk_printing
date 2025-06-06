@@ -296,12 +296,29 @@ public class PrintActivity extends Activity {
                     posApiHelper.PrintSetAlign(0); // Left alignment
                     posApiHelper.PrintStr("  County Government\n");
                     posApiHelper.PrintStr("   of Kajiado\n");
-                    posApiHelper.PrintStr("--------------------------------\n");
+
+                    // Reset font to Font A and normal size for regular content
+                    posApiHelper.PrintSetBold(0); // Disable bold
+                    posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0); // Font A, normal size
+
+                    posApiHelper.PrintStr("-----------------------------\n");
+
+                    posApiHelper.PrintSetBold(0); // Enable bold
+                    // Font B with doubled size: Use 16x16 base for Font B with 2x zoom
+                    posApiHelper.PrintSetFont((byte) 16, (byte) 16, (byte) 3); // Font B (128) + 2x zoom (2) = 2
+                    posApiHelper.PrintSetAlign(0); // Left alignment
+
                     posApiHelper.PrintStr("*** V1 *** \n");
 
                     // "Receipt No" - same Font B doubled formatting
+
                     posApiHelper.PrintStr("Receipt No  " + currentReceiptNumber + "\n");
-                    posApiHelper.PrintStr("--------------------------------\n");
+
+                    // Reset font to Font A and normal size for regular content
+                    posApiHelper.PrintSetBold(0); // Disable bold
+                    posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0); // Font A, normal size
+
+                    posApiHelper.PrintStr("-----------------------------\n");
 
                     // Reset font to Font A and normal size for regular content
                     posApiHelper.PrintSetBold(0); // Disable bold
@@ -316,7 +333,12 @@ public class PrintActivity extends Activity {
                     posApiHelper.PrintSetFont((byte) 16, (byte) 16, (byte) 3); // Font B with 2x zoom
                     posApiHelper.PrintSetAlign(0); // Left alignment
                     posApiHelper.PrintStr(currentTimestamp + "\n");
-                    posApiHelper.PrintStr("--------------------------------\n"); // Separator after timestamp
+
+                    // Reset font to Font A and normal size for regular content
+                    posApiHelper.PrintSetBold(0); // Disable bold
+                    posApiHelper.PrintSetFont((byte) 24, (byte) 24, (byte) 0); // Font A, normal size
+
+                    posApiHelper.PrintStr("-----------------------------\n"); // Separator after timestamp
 
                     // --- KajiadoPay with Font B, bold, and doubled size ---
                     posApiHelper.PrintSetBold(0); // Keep bold enabled
@@ -419,35 +441,27 @@ public class PrintActivity extends Activity {
 
         StringBuilder receipt = new StringBuilder();
 
-        // The header "County Government of Kajiado", receipt number, date, and KajiadoPay
-        // are now handled separately in PrintThread with custom formatting.
         receipt.append("Amount ").append(String.format("%.1f", totalAmount)).append("\n");
-        receipt.append("--------------------------------\n");
+        receipt.append("-----------------------------\n");
 
         // Transaction details
         receipt.append("Cess Point : ").append(cessPointField.getText()).append("\n");
         receipt.append("Number Plate : ").append(numberPlateField.getText()).append("\n");
         receipt.append("Destination : ").append(destinationField.getText()).append("\n");
         receipt.append("Bill No :").append(currentBillNumber.toUpperCase()).append("\n");
-        receipt.append("--------------------------------\n");
+        receipt.append("-----------------------------\n");
 
         // Item details
         receipt.append("Item: ").append(itemField.getText()).append("\n");
         receipt.append("Amount: ").append(String.format("%.2f", amount)).append("\n");
         receipt.append("Quantity: ").append(quantity).append("\n");
-        receipt.append("--------------------------------\n");
-        receipt.append("--------------------------------\n");
-
+        receipt.append("-----------------------------\n");
+        receipt.append("-----------------------------\n");
         // Footer
         receipt.append("Issued by: Test User\n");
-        receipt.append("--------------------------------\n");
+        receipt.append("-----------------------------\n");
         receipt.append("DSN: TEST001\n");
-        receipt.append("--------------------------------\n");
-        // The timestamp and KajiadoPay lines are now handled in PrintThread.
-        // receipt.append("--------------------------------\n");
-        // receipt.append(currentTimestamp).append("\n");
-        // receipt.append("--------------------------------\n");
-        // receipt.append(" KajiadoPay\n");
+        receipt.append("-----------------------------\n");
 
         return receipt.toString();
     }
