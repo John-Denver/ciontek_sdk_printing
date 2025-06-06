@@ -48,20 +48,6 @@ public class MyService extends Service {
                 } catch (RemoteException e) {
                     throw new RuntimeException(e);
                 }
-                /*
-                *  or
-                *  No parameter defaults Api
-                 */
-
-                /*
-                try {
-                    ret= posApiHelper.PrintInit();
-                } catch (PrintInitException e) {
-                    e.printStackTrace();
-                    int initRet = e.getExceptionCode();
-                    Log.e(TAG,"initRer : "+initRet);
-                }
-                */
 
                 if (ret != 0) {
                     return;
